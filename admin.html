@@ -64,6 +64,46 @@ tr:hover td{background:rgba(255,255,255,0.02)}
 .loading{text-align:center;padding:40px;color:var(--muted);font-size:14px}
 .empty{text-align:center;padding:40px;color:var(--muted);font-size:14px}
 
+/* FILTER BAR */
+.filter-bar{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px 16px;margin-bottom:16px;
+}
+.filter-group{display:flex;align-items:center;gap:6px}
+.filter-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap}
+.filter-input{
+  background:var(--dark2);border:1px solid var(--border);
+  border-radius:8px;padding:7px 10px;color:var(--text);
+  font-size:13px;outline:none;color-scheme:dark;
+}
+.filter-input:focus{border-color:var(--gold)}
+.filter-quick{display:flex;gap:6px;flex-wrap:wrap}
+.qbtn{
+  padding:6px 12px;background:transparent;
+  border:1px solid var(--border);border-radius:6px;
+  color:var(--muted);font-size:12px;font-weight:600;
+  cursor:pointer;font-family:inherit;transition:all .2s;
+}
+.qbtn:hover,.qbtn.active{background:rgba(199,160,7,0.1);border-color:var(--gold);color:var(--gold)}
+.export-btn{
+  margin-left:auto;padding:7px 16px;
+  background:var(--green);color:#fff;
+  border:none;border-radius:8px;font-size:12px;font-weight:700;
+  cursor:pointer;font-family:inherit;transition:background .2s;white-space:nowrap;
+}
+.export-btn:hover{background:var(--green2)}
+
+/* DOWNLOAD BUTTON */
+.dl-btn{
+  display:inline-block;padding:4px 10px;
+  background:rgba(10,92,54,0.15);color:#5de8a0;
+  border:1px solid rgba(10,92,54,0.3);border-radius:6px;
+  font-size:11px;font-weight:700;cursor:pointer;
+  text-decoration:none;transition:all .2s;font-family:inherit;
+}
+.dl-btn:hover{background:rgba(10,92,54,0.3);color:#fff}
+
 /* REVENUE CHART */
 .chart-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
 .chart-title{font-size:14px;font-weight:700;margin-bottom:16px}
@@ -140,6 +180,25 @@ tr:hover td{background:rgba(255,255,255,0.02)}
       <div class="tab" onclick="switchTab('bookings')">📅 Bookings</div>
     </div>
 
+    <!-- DATE FILTER -->
+    <div class="filter-bar">
+      <div class="filter-group">
+        <label class="filter-label">From</label>
+        <input type="date" id="filterFrom" class="filter-input" onchange="applyFilter()">
+      </div>
+      <div class="filter-group">
+        <label class="filter-label">To</label>
+        <input type="date" id="filterTo" class="filter-input" onchange="applyFilter()">
+      </div>
+      <div class="filter-quick">
+        <button class="qbtn" onclick="setQuick('today')">Today</button>
+        <button class="qbtn" onclick="setQuick('week')">This Week</button>
+        <button class="qbtn" onclick="setQuick('month')">This Month</button>
+        <button class="qbtn" onclick="setQuick('all')">All</button>
+      </div>
+      <button class="export-btn" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+
     <div class="table-wrap">
       <div class="table-header">
         <div class="table-title" id="tableTitle">Recent Trips</div>
@@ -151,7 +210,7 @@ tr:hover td{background:rgba(255,255,255,0.02)}
 </div>
 
 <script>
-const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbx-HcaVnaAhrQhTME7MqnGJGkMwMphVKIunW7Yi30jhuZRZ56luC1xZoSTLGDDSStQKJQ/exec';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNKPSLH7VHvHr39PDePDoLMcAySy2_P9THYvasxykCPi2xIxL5t857cz7iG34iqZuB-A/exec';
 const ALLOWED_EMAIL = 'hrcabschennai@gmail.com';
 let allData = {};
 let currentTab = 'trips';
@@ -219,18 +278,33 @@ function renderTrips(trips){
   document.getElementById('tableBody').innerHTML=`
   <table>
     <thead><tr>
-      <th>Trip No</th><th>Customer</th><th>Type</th><th>Date</th><th>Total</th>
+      <th>Trip No</th><th>Customer</th><th>Type</th><th>Date</th><th>Total</th><th>Invoice</th>
     </tr></thead>
     <tbody>` +
-    trips.slice(0,50).map(t=>`<tr>
+    trips.slice(0,100).map(t=>`<tr>
       <td style="font-weight:600;color:var(--gold)">${t.tripNo||''}</td>
       <td>${t.customer||''}</td>
       <td><span class="badge ${t.type==='City Trip'?'badge-city':'badge-out'}">${t.type||''}</span></td>
       <td style="color:var(--muted)">${t.date||''}</td>
       <td class="total-cell">Rs.${(t.total||0).toFixed(0)}</td>
+      <td>${t.driveUrl
+        ? `<a href="${t.driveUrl}" target="_blank" class="dl-btn">⬇ PDF</a>`
+        : `<button class="dl-btn" onclick="fetchInvoice('${t.tripNo}','${(t.customer||'').replace(/'/g,'')}')" >⬇ PDF</button>`
+      }</td>
     </tr>`).join('') +
     `</tbody></table>`;
 }
+
+function fetchInvoice(tripNo, customer) {
+  fetch(SCRIPT_URL + '?action=getInvoiceUrl&tripNo=' + encodeURIComponent(tripNo) + '&customer=' + encodeURIComponent(customer))
+  .then(r=>r.json())
+  .then(res=>{
+    if(res.url) window.open(res.url,'_blank');
+    else alert('Invoice PDF not found in Drive.');
+  })
+  .catch(()=>alert('Could not reach backend.'));
+}
+
 
 function renderBookings(bookings){
   if(!bookings||!bookings.length){document.getElementById('tableBody').innerHTML='<div class="empty">No bookings yet</div>';return}
@@ -260,10 +334,85 @@ function switchTab(tab){
 }
 
 function filterTable(q){
+  applyFilter();
+}
+
+function applyFilter(){
+  const q    = document.getElementById('searchBox').value.toLowerCase();
+  const from = document.getElementById('filterFrom').value;
+  const to   = document.getElementById('filterTo').value;
+
+  let data = currentTab==='trips' ? (allData.trips||[]) : (allData.bookings||[]);
+
+  // Date filter
+  if(from || to){
+    data = data.filter(r=>{
+      const d = r.date || '';
+      // Convert dd/MM/yyyy to yyyy-MM-dd for comparison
+      const parts = d.split('/');
+      if(parts.length===3){
+        const iso = parts[2]+'-'+parts[1]+'-'+parts[0];
+        if(from && iso < from) return false;
+        if(to   && iso > to)   return false;
+      }
+      return true;
+    });
+  }
+
+  // Text search
+  if(q) data = data.filter(r=>JSON.stringify(r).toLowerCase().includes(q));
+
+  if(currentTab==='trips') renderTrips(data);
+  else renderBookings(data);
+}
+
+function setQuick(range){
+  document.querySelectorAll('.qbtn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+
+  const now   = new Date();
+  const today = now.toISOString().split('T')[0];
+  let from='', to=today;
+
+  if(range==='today'){
+    from = today;
+  } else if(range==='week'){
+    const d = new Date(now);
+    d.setDate(d.getDate() - d.getDay());
+    from = d.toISOString().split('T')[0];
+  } else if(range==='month'){
+    from = today.substring(0,7) + '-01';
+  } else {
+    from=''; to='';
+  }
+
+  document.getElementById('filterFrom').value = from;
+  document.getElementById('filterTo').value   = to;
+  applyFilter();
+}
+
+function exportCSV(){
   const data = currentTab==='trips' ? (allData.trips||[]) : (allData.bookings||[]);
-  const filtered = q ? data.filter(r=>JSON.stringify(r).toLowerCase().includes(q.toLowerCase())) : data;
-  if(currentTab==='trips') renderTrips(filtered);
-  else renderBookings(filtered);
+  if(!data.length){alert('No data to export.');return;}
+
+  let csv = '';
+  if(currentTab==='trips'){
+    csv = 'Trip No,Customer,Type,Date,Total
+' +
+      data.map(t=>`"${t.tripNo||''}","${t.customer||''}","${t.type||''}","${t.date||''}","${(t.total||0).toFixed(2)}"`).join('
+');
+  } else {
+    csv = 'Name,Phone,Trip Type,Date,Pickup,Drop
+' +
+      data.map(b=>`"${b.name||''}","${b.phone||''}","${b.tripType||''}","${b.date||''}","${b.pickup||''}","${b.drop||''}"`).join('
+');
+  }
+
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'hrcabs_' + currentTab + '_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
 }
 
 // Auto-refresh every 2 minutes
