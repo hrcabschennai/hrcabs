@@ -106,9 +106,9 @@ tr:hover td{background:rgba(255,255,255,0.02)}
 /* REVENUE CHART */
 .chart-wrap{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:20px}
 .chart-title{font-size:14px;font-weight:700;margin-bottom:16px}
-.chart-bars{display:flex;align-items:flex-end;gap:6px;height:120px}
-.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
-.bar{width:100%;background:linear-gradient(180deg,var(--gold),var(--green));border-radius:4px 4px 0 0;min-height:4px;transition:height .4s}
+.chart-bars{display:flex;align-items:flex-end;gap:6px;height:140px;padding:8px 4px 0}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px}
+.bar{width:100%;min-height:4px;background:linear-gradient(180deg,var(--gold),var(--green));border-radius:4px 4px 0 0;min-height:4px;transition:height .4s}
 .bar-label{font-size:9px;color:var(--muted);text-align:center}
 .bar-val{font-size:9px;color:var(--gold);font-weight:700}
 
@@ -246,11 +246,11 @@ function renderChart(last7){
   if(!last7||!last7.length){wrap.innerHTML='<div style="color:var(--muted);font-size:13px;padding:20px">No data yet.</div>';return;}
   const max = Math.max(...last7.map(d=>d.revenue), 1);
   wrap.innerHTML = last7.map(d=>{
-    const h = Math.max(4, Math.round((d.revenue/max)*140));
-    return '<div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">'
-      + '<div style="font-size:9px;color:var(--muted)">' + (d.revenue>0?'Rs.'+d.revenue.toFixed(0):'') + '</div>'
-      + '<div style="width:28px;height:'+h+'px;background:var(--gold);border-radius:3px 3px 0 0;margin-top:auto"></div>'
-      + '<div style="font-size:9px;color:var(--muted)">'+d.label+'</div>'
+    const h = Math.max(4, Math.round((d.revenue/max)*100));
+    return '<div class="bar-col">'
+      + '<div class="bar-val">' + (d.revenue>0?'Rs.'+Math.round(d.revenue):'') + '</div>'
+      + '<div class="bar" style="height:'+h+'px"></div>'
+      + '<div class="bar-label">'+d.label+'</div>'
       + '</div>';
   }).join('');
 }
