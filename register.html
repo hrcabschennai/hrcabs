@@ -379,7 +379,11 @@ function submitDriver() {
   err.style.display = 'none';
   btn.disabled = true; txt.style.display = 'none'; spin.style.display = '';
 
-  const langs = getSelectedChips(document.querySelector('#tab-driver .chip-group:nth-of-type(3)'));
+  // Collect selected language chips directly
+  const langs = Array.from(document.querySelectorAll('#tab-driver .chip.selected'))
+    .map(c => c.textContent.trim())
+    .filter(t => ['Tamil','English','Telugu','Hindi'].includes(t))
+    .join(', ');
 
   const payload = {
     action: 'registerDriver',
@@ -423,7 +427,10 @@ function submitVehicle() {
   document.getElementById('v-err').style.display = 'none';
   btn.disabled = true; txt.style.display = 'none'; spin.style.display = '';
 
-  const features = getSelectedChips(document.querySelector('#tab-vehicle .chip-group'));
+  const features = Array.from(document.querySelectorAll('#tab-vehicle .chip.selected'))
+    .map(c => c.textContent.trim())
+    .filter(t => ['AC','GPS','Dashcam','Music','USB Charging','Sedan','SUV','MUV','Van'].includes(t))
+    .join(', ');
 
   const payload = {
     action: 'registerVehicle',
