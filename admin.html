@@ -356,8 +356,8 @@ function renderDrivers(drivers){
       +'<span style="padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;background:'+(d.status==='Approved'?'rgba(10,92,54,0.2)':d.status==='Rejected'?'rgba(200,50,50,0.15)':'rgba(199,160,7,0.15)')+';color:'+(d.status==='Approved'?'#5de8a0':d.status==='Rejected'?'#ff8080':'var(--gold)')+'">'+( d.status||'Pending')+'</span>'
       +'</td>'
       +'<td style="padding:8px;text-align:center;border-bottom:1px solid var(--border)">'
-      +(d.status!=='Approved'?'<button onclick="approveDriverAdmin(''+d.name+'',''+d.phone+'','Approved')" style="padding:4px 10px;background:rgba(10,92,54,0.2);color:#5de8a0;border:1px solid rgba(10,92,54,0.4);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:4px">Approve</button>':'')
-      +(d.status!=='Rejected'?'<button onclick="approveDriverAdmin(''+d.name+'',''+d.phone+'','Rejected')" style="padding:4px 10px;background:rgba(200,50,50,0.1);color:#ff8080;border:1px solid rgba(200,50,50,0.3);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">Reject</button>':'')
+      +(d.status!=='Approved'?'<button data-name="'+d.name+'" data-phone="'+d.phone+'" data-action="Approved" onclick="adminApproveDriver(this)" style="padding:4px 10px;background:rgba(10,92,54,0.2);color:#5de8a0;border:1px solid rgba(10,92,54,0.4);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:4px">Approve</button>':'')
+      +(d.status!=='Rejected'?'<button data-name="'+d.name+'" data-phone="'+d.phone+'" data-action="Rejected" onclick="adminApproveDriver(this)" style="padding:4px 10px;background:rgba(200,50,50,0.1);color:#ff8080;border:1px solid rgba(200,50,50,0.3);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">Reject</button>':'')
       +'</td></tr>'
     ).join('')
     +'</tbody></table>';
@@ -384,29 +384,34 @@ function renderVehicles(vehicles){
       +'<span style="padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;background:'+(v.status==='Approved'?'rgba(10,92,54,0.2)':v.status==='Rejected'?'rgba(200,50,50,0.15)':'rgba(199,160,7,0.15)')+';color:'+(v.status==='Approved'?'#5de8a0':v.status==='Rejected'?'#ff8080':'var(--gold)')+'">'+( v.status||'Pending')+'</span>'
       +'</td>'
       +'<td style="padding:8px;text-align:center;border-bottom:1px solid var(--border)">'
-      +(v.status!=='Approved'?'<button onclick="approveVehicleAdmin(''+v.regNo+'','Approved')" style="padding:4px 10px;background:rgba(10,92,54,0.2);color:#5de8a0;border:1px solid rgba(10,92,54,0.4);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:4px">Approve</button>':'')
-      +(v.status!=='Rejected'?'<button onclick="approveVehicleAdmin(''+v.regNo+'','Rejected')" style="padding:4px 10px;background:rgba(200,50,50,0.1);color:#ff8080;border:1px solid rgba(200,50,50,0.3);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">Reject</button>':'')
+      +(v.status!=='Approved'?'<button data-regno="'+v.regNo+'" data-action="Approved" onclick="adminApproveVehicle(this)" style="padding:4px 10px;background:rgba(10,92,54,0.2);color:#5de8a0;border:1px solid rgba(10,92,54,0.4);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:4px">Approve</button>':'')
+      +(v.status!=='Rejected'?'<button data-regno="'+v.regNo+'" data-action="Rejected" onclick="adminApproveVehicle(this)" style="padding:4px 10px;background:rgba(200,50,50,0.1);color:#ff8080;border:1px solid rgba(200,50,50,0.3);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">Reject</button>':'')
       +'</td></tr>'
     ).join('')
     +'</tbody></table>';
 }
 
-function approveDriverAdmin(name, phone, status){
+function adminApproveDriver(btn){
+  var name = btn.getAttribute('data-name');
+  var phone = btn.getAttribute('data-phone');
+  var status = btn.getAttribute('data-action');
   if(!confirm(status + ' driver ' + name + '?')) return;
-  fetch(SCRIPT_URL, {method:'POST', body: JSON.stringify({action:'approveDriver', name, phone, status})})
+  fetch(SCRIPT_URL, {method:'POST', body: JSON.stringify({action:'approveDriver', name:name, phone:phone, status:status})})
   .then(r=>r.json()).then(res=>{
     if(res.success){ alert('Driver ' + status + '!'); loadDashboard(); }
-    else alert('Error: ' + res.error);
-  });
+    else alert('Error: ' + (res.error||'Unknown'));
+  }).catch(()=>alert('Network error'));
 }
 
-function approveVehicleAdmin(regNo, status){
+function adminApproveVehicle(btn){
+  var regNo = btn.getAttribute('data-regno');
+  var status = btn.getAttribute('data-action');
   if(!confirm(status + ' vehicle ' + regNo + '?')) return;
-  fetch(SCRIPT_URL, {method:'POST', body: JSON.stringify({action:'approveVehicle', regNo, status})})
+  fetch(SCRIPT_URL, {method:'POST', body: JSON.stringify({action:'approveVehicle', regNo:regNo, status:status})})
   .then(r=>r.json()).then(res=>{
     if(res.success){ alert('Vehicle ' + status + '!'); loadDashboard(); }
-    else alert('Error: ' + res.error);
-  });
+    else alert('Error: ' + (res.error||'Unknown'));
+  }).catch(()=>alert('Network error'));
 }
 function loadDashboard(){
   document.getElementById('lastUpdated').textContent = 'Loading data...';
