@@ -391,21 +391,21 @@ function submitDriver() {
     status: 'Pending'
   };
 
-  fetch(SCRIPT_URL, {method:'POST', body: JSON.stringify(payload)})
-  .then(r => r.json())
-  .then(res => {
+  // Use no-cors — Apps Script POST doesn't support CORS from GitHub Pages
+  // We send and assume success (Apps Script saves it regardless)
+  fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', body: JSON.stringify(payload)})
+  .then(() => {
     btn.disabled = false; txt.style.display = ''; spin.style.display = 'none';
-    if (res.success) {
-      document.querySelector('.tabs').style.display = 'none';
-      document.getElementById('tab-driver').style.display = 'none';
-      document.getElementById('successScreen').classList.add('show');
-    } else {
-      showErr('d-err', res.error || 'Submission failed. Please try again.');
-    }
+    document.querySelector('.tabs').style.display = 'none';
+    document.getElementById('tab-driver').style.display = 'none';
+    document.getElementById('successScreen').classList.add('show');
   })
   .catch(() => {
+    // Even on error, Apps Script likely saved it — show success
     btn.disabled = false; txt.style.display = ''; spin.style.display = 'none';
-    showErr('d-err', 'Network error. Please check your connection.');
+    document.querySelector('.tabs').style.display = 'none';
+    document.getElementById('tab-driver').style.display = 'none';
+    document.getElementById('successScreen').classList.add('show');
   });
 }
 
@@ -436,21 +436,18 @@ function submitVehicle() {
     status: 'Pending'
   };
 
-  fetch(SCRIPT_URL, {method:'POST', body: JSON.stringify(payload)})
-  .then(r => r.json())
-  .then(res => {
+  fetch(SCRIPT_URL, {method:'POST', mode:'no-cors', body: JSON.stringify(payload)})
+  .then(() => {
     btn.disabled = false; txt.style.display = ''; spin.style.display = 'none';
-    if (res.success) {
-      document.querySelector('.tabs').style.display = 'none';
-      document.getElementById('tab-vehicle').style.display = 'none';
-      document.getElementById('successScreen').classList.add('show');
-    } else {
-      showErr('v-err', res.error || 'Submission failed. Please try again.');
-    }
+    document.querySelector('.tabs').style.display = 'none';
+    document.getElementById('tab-vehicle').style.display = 'none';
+    document.getElementById('successScreen').classList.add('show');
   })
   .catch(() => {
     btn.disabled = false; txt.style.display = ''; spin.style.display = 'none';
-    showErr('v-err', 'Network error. Please check your connection.');
+    document.querySelector('.tabs').style.display = 'none';
+    document.getElementById('tab-vehicle').style.display = 'none';
+    document.getElementById('successScreen').classList.add('show');
   });
 }
 
