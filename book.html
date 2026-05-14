@@ -123,6 +123,24 @@ textarea{resize:none;min-height:80px}
       </div>
     </div>
     <div class="field">
+      <label>Preferred Car Type</label>
+      <div class="chip-group" id="carTypeGroup">
+        <div class="chip car-chip selected" onclick="selectCar(this,'Any')">Any</div>
+      </div>
+      <div id="carTypeLoading" style="font-size:12px;color:var(--muted);margin-top:6px">Loading available vehicles...</div>
+      <input type="hidden" id="preferredCar" value="Any">
+    </div>
+    <div class="field">
+      <label>Seating Preference</label>
+      <div class="chip-group">
+        <div class="chip seat-chip selected" onclick="selectSeat(this,'Any')">Any</div>
+        <div class="chip seat-chip" onclick="selectSeat(this,'4 Seater')">4 Seater</div>
+        <div class="chip seat-chip" onclick="selectSeat(this,'5 Seater')">5 Seater</div>
+        <div class="chip seat-chip" onclick="selectSeat(this,'7 Seater')">7 Seater</div>
+      </div>
+      <input type="hidden" id="preferredSeats" value="Any">
+    </div>
+    <div class="field">
       <label>Additional Notes</label>
       <textarea id="notes" placeholder="Any special requirements..."></textarea>
     </div>
@@ -146,6 +164,54 @@ textarea{resize:none;min-height:80px}
 <script>
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxNKPSLH7VHvHr39PDePDoLMcAySy2_P9THYvasxykCPi2xIxL5t857cz7iG34iqZuB-A/exec';
 let tripType = '';
+let preferredCar = 'Any';
+let preferredSeats = 'Any';
+
+function selectCar(el, val) {
+  document.querySelectorAll('.car-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  preferredCar = val;
+  document.getElementById('preferredCar').value = val;
+}
+function selectCarChip(el) {
+  selectCar(el, el.getAttribute('data-car') || 'Any');
+}
+
+function selectSeat(el, val) {
+  document.querySelectorAll('.seat-chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  preferredSeats = val;
+  document.getElementById('preferredSeats').value = val;
+}
+
+function loadAvailableVehicles() {
+  const cbName = 'vehCb' + Date.now();
+  const s = document.createElement('script');
+  window[cbName] = function(data) {
+    delete window[cbName]; s.remove();
+    document.getElementById('carTypeLoading').style.display = 'none';
+    const group = document.getElementById('carTypeGroup');
+    // Get unique models
+    const models = ['Any'];
+    (data.vehicles||[]).forEach(function(v) {
+      if (v.model && models.indexOf(v.model) === -1) models.push(v.model);
+    });
+    // Rebuild chips
+    group.innerHTML = models.map(function(m) {
+      var cls = 'chip car-chip' + (m==='Any' ? ' selected' : '');
+      return '<div class="' + cls + '" data-car="' + m + '" onclick="selectCarChip(this)">' + m + '</div>';
+    }).join('');
+    // Set default
+    document.getElementById('preferredCar').value = 'Any';
+  };
+  s.onerror = function() {
+    delete window[cbName]; s.remove();
+    document.getElementById('carTypeLoading').textContent = 'Could not load vehicles.';
+  };
+  s.src = 'https://script.google.com/macros/s/AKfycbxNKPSLH7VHvHr39PDePDoLMcAySy2_P9THYvasxykCPi2xIxL5t857cz7iG34iqZuB-A/exec?action=getDrivers&callback=' + cbName;
+  document.head.appendChild(s);
+  setTimeout(function(){ if(window[cbName]) s.onerror(); }, 5000);
+}
 function selectTrip(t){
   tripType=t;
   ['city','out','air'].forEach(x=>document.getElementById('chip-'+x).classList.remove('selected'));
@@ -153,6 +219,9 @@ function selectTrip(t){
 }
 // Set today as default date
 document.getElementById('tripDate').value = new Date().toISOString().split('T')[0];
+// Set default seat chip selected
+document.querySelectorAll('.seat-chip')[0] && document.querySelectorAll('.seat-chip')[0].classList.add('selected');
+loadAvailableVehicles();
 
 function submitBooking(){
   const v = id => document.getElementById(id).value.trim();
@@ -180,6 +249,8 @@ function submitBooking(){
     drop:v('drop'),
     date:v('tripDate'),
     time:v('tripTime'),
+    preferredCar: document.getElementById('preferredCar').value || 'Any',
+    preferredSeats: document.getElementById('preferredSeats').value || 'Any',
     notes:v('notes'),
   };
 
