@@ -232,13 +232,15 @@ function logout() {
 
 // ── RENDER STATS ──────────────────────────────────
 function renderStats(d){
-  document.getElementById('todayRev').textContent   = 'Rs.' + (d.todayRevenue||0).toFixed(0);
-  document.getElementById('todayTrips').textContent = (d.todayTrips||0) + ' trips';
-  document.getElementById('weekRev').textContent    = 'Rs.' + (d.weekRevenue||0).toFixed(0);
-  document.getElementById('weekTrips').textContent  = (d.weekTrips||0) + ' trips';
-  document.getElementById('monthRev').textContent   = 'Rs.' + (d.monthRevenue||0).toFixed(0);
-  document.getElementById('monthTrips').textContent = (d.monthTrips||0) + ' trips';
-  document.getElementById('pendingBook').textContent= (d.pendingBookings||0) + ' pending';
+  function set(id,val){var el=document.getElementById(id);if(el)el.textContent=val;}
+  set('todayRev',   'Rs.'+(d.todayRevenue||0).toFixed(0));
+  set('todayTrips', (d.todayTrips||0)+' trips');
+  set('weekRev',    'Rs.'+(d.weekRevenue||0).toFixed(0));
+  set('weekTrips',  (d.weekTrips||0)+' trips');
+  set('monthRev',   'Rs.'+(d.monthRevenue||0).toFixed(0));
+  set('monthTrips', (d.monthTrips||0)+' trips');
+  set('newBookings',(d.pendingBookings||0)+' pending');
+  set('pendingBook',(d.pendingBookings||0)+' pending');
 }
 
 // ── RENDER CHART ──────────────────────────────────
