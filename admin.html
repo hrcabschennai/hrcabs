@@ -166,6 +166,8 @@ tr:hover td{background:rgba(255,255,255,0.02)}
     <div class="tabs">
       <div class="tab active" onclick="switchTab('trips')">🚖 Trips</div>
       <div class="tab" onclick="switchTab('bookings')">📅 Bookings</div>
+      <div class="tab" onclick="switchTab('drivers')">🧑 Drivers</div>
+      <div class="tab" onclick="switchTab('vehicles')">🚗 Vehicles</div>
     </div>
 
     <!-- DATE FILTER -->
@@ -326,10 +328,86 @@ function switchTab(tab){
     const isActive = t.getAttribute('onclick') && t.getAttribute('onclick').includes("'"+tab+"'");
     t.classList.toggle('active', isActive);
   });
-  if(tab==='trips') renderTrips(allData.trips||[]);
-  else renderBookings(allData.bookings||[]);
+  if(tab==='trips')    renderTrips(allData.trips||[]);
+  else if(tab==='bookings') renderBookings(allData.bookings||[]);
+  else if(tab==='drivers')  renderDrivers(allData.drivers||[]);
+  else if(tab==='vehicles') renderVehicles(allData.vehicles||[]);
 }
 
+
+function renderDrivers(drivers){
+  const body = document.getElementById('tableBody');
+  if(!drivers||!drivers.length){body.innerHTML='<div class="empty">No driver registrations yet.</div>';return;}
+  body.innerHTML='<table style="width:100%;border-collapse:collapse">'
+    +'<thead><tr>'
+    +'<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Name</th>'
+    +'<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Phone</th>'
+    +'<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Licence</th>'
+    +'<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Vehicle</th>'
+    +'<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Status</th>'
+    +'<th style="text-align:center;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Action</th>'
+    +'</tr></thead><tbody>'
+    +drivers.map(d=>'<tr>'
+      +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border);font-weight:600">'+(d.name||'')+'</td>'
+      +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border);color:var(--gold)">'+(d.phone||'')+'</td>'
+      +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border)">'+(d.licence||'')+'</td>'
+      +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border)">'+(d.vehicle||'')+' '+(d.regNo||'')+'</td>'
+      +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border)">'
+      +'<span style="padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;background:'+(d.status==='Approved'?'rgba(10,92,54,0.2)':d.status==='Rejected'?'rgba(200,50,50,0.15)':'rgba(199,160,7,0.15)')+';color:'+(d.status==='Approved'?'#5de8a0':d.status==='Rejected'?'#ff8080':'var(--gold)')+'">'+( d.status||'Pending')+'</span>'
+      +'</td>'
+      +'<td style="padding:8px;text-align:center;border-bottom:1px solid var(--border)">'
+      +(d.status!=='Approved'?'<button onclick="approveDriverAdmin(''+d.name+'',''+d.phone+'','Approved')" style="padding:4px 10px;background:rgba(10,92,54,0.2);color:#5de8a0;border:1px solid rgba(10,92,54,0.4);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:4px">Approve</button>':'')
+      +(d.status!=='Rejected'?'<button onclick="approveDriverAdmin(''+d.name+'',''+d.phone+'','Rejected')" style="padding:4px 10px;background:rgba(200,50,50,0.1);color:#ff8080;border:1px solid rgba(200,50,50,0.3);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">Reject</button>':'')
+      +'</td></tr>'
+    ).join('')
+    +'</tbody></table>';
+}
+
+function renderVehicles(vehicles){
+  const body = document.getElementById('tableBody');
+  if(!vehicles||!vehicles.length){body.innerHTML='<div class="empty">No vehicle registrations yet.</div>';return;}
+  body.innerHTML='<table style="width:100%;border-collapse:collapse">'
+    +'<thead><tr>'
+    +'<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Model</th>'
+    +'<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Reg No</th>'
+    +'<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Owner</th>'
+    +'<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Type</th>'
+    +'<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Status</th>'
+    +'<th style="text-align:center;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Action</th>'
+    +'</tr></thead><tbody>'
+    +vehicles.map(v=>'<tr>'
+      +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border);font-weight:600">'+(v.model||'')+'</td>'
+      +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border);color:var(--gold)">'+(v.regNo||'')+'</td>'
+      +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border)">'+(v.owner||'')+'</td>'
+      +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border)">'+(v.vehicleType||'')+'</td>'
+      +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border)">'
+      +'<span style="padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;background:'+(v.status==='Approved'?'rgba(10,92,54,0.2)':v.status==='Rejected'?'rgba(200,50,50,0.15)':'rgba(199,160,7,0.15)')+';color:'+(v.status==='Approved'?'#5de8a0':v.status==='Rejected'?'#ff8080':'var(--gold)')+'">'+( v.status||'Pending')+'</span>'
+      +'</td>'
+      +'<td style="padding:8px;text-align:center;border-bottom:1px solid var(--border)">'
+      +(v.status!=='Approved'?'<button onclick="approveVehicleAdmin(''+v.regNo+'','Approved')" style="padding:4px 10px;background:rgba(10,92,54,0.2);color:#5de8a0;border:1px solid rgba(10,92,54,0.4);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit;margin-right:4px">Approve</button>':'')
+      +(v.status!=='Rejected'?'<button onclick="approveVehicleAdmin(''+v.regNo+'','Rejected')" style="padding:4px 10px;background:rgba(200,50,50,0.1);color:#ff8080;border:1px solid rgba(200,50,50,0.3);border-radius:6px;font-size:11px;cursor:pointer;font-family:inherit">Reject</button>':'')
+      +'</td></tr>'
+    ).join('')
+    +'</tbody></table>';
+}
+
+function approveDriverAdmin(name, phone, status){
+  if(!confirm(status + ' driver ' + name + '?')) return;
+  fetch(SCRIPT_URL, {method:'POST', body: JSON.stringify({action:'approveDriver', name, phone, status})})
+  .then(r=>r.json()).then(res=>{
+    if(res.success){ alert('Driver ' + status + '!'); loadDashboard(); }
+    else alert('Error: ' + res.error);
+  });
+}
+
+function approveVehicleAdmin(regNo, status){
+  if(!confirm(status + ' vehicle ' + regNo + '?')) return;
+  fetch(SCRIPT_URL, {method:'POST', body: JSON.stringify({action:'approveVehicle', regNo, status})})
+  .then(r=>r.json()).then(res=>{
+    if(res.success){ alert('Vehicle ' + status + '!'); loadDashboard(); }
+    else alert('Error: ' + res.error);
+  });
+}
 function loadDashboard(){
   document.getElementById('lastUpdated').textContent = 'Loading data...';
   document.getElementById('tableBody').innerHTML = '<div class="loading">Loading trips...</div>';
