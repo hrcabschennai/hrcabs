@@ -289,28 +289,81 @@ function renderTrips(trips){
 function renderBookings(bookings){
   const body = document.getElementById('tableBody');
   if(!bookings||!bookings.length){body.innerHTML='<div class="empty">No bookings yet.</div>';return;}
-  body.innerHTML = '<table style="width:100%;border-collapse:collapse">'
-    + '<thead><tr>'
-    + '<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Name</th>'
-    + '<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Phone</th>'
-    + '<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Type</th>'
-    + '<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Date</th>'
-    + '<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Pickup</th>'
-    + '<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Drop</th>'
-    + '</tr></thead><tbody>'
-    + bookings.map(b=>'<tr>'
-      + '<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border)">'+(b.name||'')+'</td>'
-      + '<td style="padding:8px;font-size:12px;color:var(--gold);border-bottom:1px solid var(--border)">'+(b.phone||'')+'</td>'
-      + '<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border)">'+(b.tripType||'')+'</td>'
-      + '<td style="padding:8px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--border)">'+(b.date||'')+'</td>'
-      + '<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border)">'+(b.pickup||'')+'</td>'
-      + '<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border)">'+(b.drop||'')+'</td>'
-      + '</tr>'
-    ).join('')
-    + '</tbody></table>';
+  body.innerHTML='<table style="width:100%;border-collapse:collapse">'
+    +'<thead><tr>'
+    +'<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Name</th>'
+    +'<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Phone</th>'
+    +'<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Type</th>'
+    +'<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Date</th>'
+    +'<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Pickup → Drop</th>'
+    +'<th style="text-align:left;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Status</th>'
+    +'<th style="text-align:center;padding:8px;font-size:11px;color:var(--muted);border-bottom:1px solid var(--border)">Actions</th>'
+    +'</tr></thead><tbody>'
+    +bookings.map(function(b,i){
+      const status = b.status || 'Pending';
+      const statusColor = status==='Confirmed' ? '#5de8a0' : status==='Rejected' ? '#ff8080' : status==='Negotiating' ? '#C7A007' : status==='Lost' ? '#888' : '#C7A007';
+      const statusBg = status==='Confirmed' ? 'rgba(10,92,54,0.2)' : status==='Rejected' ? 'rgba(200,50,50,0.15)' : status==='Negotiating' ? 'rgba(199,160,7,0.15)' : status==='Lost' ? 'rgba(100,100,100,0.15)' : 'rgba(199,160,7,0.15)';
+      return '<tr>'
+        +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border);font-weight:600">'+(b.name||'')+'</td>'
+        +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border)"><a href="tel:'+b.phone+'" style="color:var(--gold)">'+(b.phone||'')+'</a></td>'
+        +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border)">'+(b.tripType||'')+'</td>'
+        +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border);color:var(--muted)">'+(b.date||'').toString().split('T')[0]+'</td>'
+        +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border)">'+(b.pickup||'')+' → '+(b.drop||'')+'</td>'
+        +'<td style="padding:8px;border-bottom:1px solid var(--border)">'
+        +'<span style="padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;background:'+statusBg+';color:'+statusColor+'">'+status+'</span>'
+        +'</td>'
+        +'<td style="padding:8px;border-bottom:1px solid var(--border);white-space:nowrap;text-align:center">'
+        +(status!=='Confirmed'?'<button data-idx="'+i+'" data-status="Confirmed" onclick="updateBookingStatus(this)" style="padding:3px 8px;background:rgba(10,92,54,0.2);color:#5de8a0;border:1px solid rgba(10,92,54,0.4);border-radius:5px;font-size:10px;cursor:pointer;font-family:inherit;margin:1px">✓ Confirm</button>':'')
+        +(status!=='Negotiating'?'<button data-idx="'+i+'" data-status="Negotiating" onclick="updateBookingStatus(this)" style="padding:3px 8px;background:rgba(199,160,7,0.15);color:#C7A007;border:1px solid rgba(199,160,7,0.3);border-radius:5px;font-size:10px;cursor:pointer;font-family:inherit;margin:1px">₹ Negotiate</button>':'')
+        +(status!=='Rejected'?'<button data-idx="'+i+'" data-status="Rejected" onclick="updateBookingStatus(this)" style="padding:3px 8px;background:rgba(200,50,50,0.1);color:#ff8080;border:1px solid rgba(200,50,50,0.3);border-radius:5px;font-size:10px;cursor:pointer;font-family:inherit;margin:1px">✗ Reject</button>':'')
+        +(status!=='Lost'?'<button data-idx="'+i+'" data-status="Lost" onclick="updateBookingStatus(this)" style="padding:3px 8px;background:rgba(100,100,100,0.1);color:#888;border:1px solid rgba(100,100,100,0.2);border-radius:5px;font-size:10px;cursor:pointer;font-family:inherit;margin:1px">Lost</button>':'')
+        +'</td>'
+        +'</tr>';
+    }).join('')
+    +'</tbody></table>';
 }
 
-// ── FETCH INVOICE ────────────────────────────────
+function updateBookingStatus(btn){
+  const idx = parseInt(btn.getAttribute('data-idx'));
+  const status = btn.getAttribute('data-status');
+  const booking = (allData.bookings||[])[idx];
+  if(!booking) return;
+  
+  const note = status==='Negotiating' ? prompt('Enter negotiation note (e.g. "Offered Rs.2500"):','') : null;
+  
+  fetch(SCRIPT_URL, {
+    method:'POST',
+    body: JSON.stringify({
+      action: 'updateBookingStatus',
+      name: booking.name,
+      phone: booking.phone,
+      date: booking.date,
+      status: status,
+      note: note || ''
+    })
+  })
+  .then(r=>r.json())
+  .then(res=>{
+    if(res.success){
+      // Update local data
+      (allData.bookings||[])[idx].status = status;
+      if(note) (allData.bookings||[])[idx].note = note;
+      renderBookings(allData.bookings||[]);
+      // Send Telegram notification
+      if(status==='Confirmed') alert('Booking confirmed! Telegram notification sent.');
+      else if(status==='Negotiating') alert('Marked as negotiating.');
+    } else {
+      alert('Error: '+(res.error||'Unknown'));
+    }
+  })
+  .catch(()=>{
+    // Update locally even if fetch fails
+    (allData.bookings||[])[idx].status = status;
+    renderBookings(allData.bookings||[]);
+  });
+}
+
+
 function fetchInvoice(btn){
   var tripNo = btn.dataset.trip;
   var customer = btn.dataset.cust;
