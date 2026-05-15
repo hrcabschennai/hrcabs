@@ -511,6 +511,11 @@
       </div>
 
       <div class="field">
+        <label>Customer Phone <span class="req">*</span></label>
+        <input type="tel" id="customerPhone" placeholder="e.g. 9876543210" maxlength="10">
+      </div>
+
+      <div class="field">
         <label>Customer Address</label>
         <textarea id="customerAddress" placeholder="e.g. Vanagaram, Chennai"></textarea>
       </div>
@@ -1015,6 +1020,7 @@ function submitForm() {
     gstBill:         state.gstBill,
     gstRate:         state.gstRate || '0',
     customerName:    get('customerName'),
+    customerPhone:   get('customerPhone'),
     customerAddress: get('customerAddress'),
     customerGSTIN:   get('customerGSTIN'),
     vehicleNumber:   get('vehicleNumber'),
