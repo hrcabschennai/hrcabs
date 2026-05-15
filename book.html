@@ -118,8 +118,79 @@ textarea{resize:none;min-height:80px}
         <input type="date" id="tripDate">
       </div>
       <div class="field">
-        <label>Time <span class="req">*</span></label>
-        <input type="time" id="tripTime">
+        <label>Pickup Time <span class="req">*</span></label>
+        <select id="tripTime">
+          <option value="">-- Select Time --</option>
+          <option value="12:00 AM (Midnight)">12:00 AM (Midnight)</option>
+          <option value="05:00 AM">05:00 AM</option>
+          <option value="05:30 AM">05:30 AM</option>
+          <option value="06:00 AM">06:00 AM</option>
+          <option value="06:30 AM">06:30 AM</option>
+          <option value="07:00 AM">07:00 AM</option>
+          <option value="07:30 AM">07:30 AM</option>
+          <option value="08:00 AM">08:00 AM</option>
+          <option value="08:30 AM">08:30 AM</option>
+          <option value="09:00 AM">09:00 AM</option>
+          <option value="09:30 AM">09:30 AM</option>
+          <option value="10:00 AM">10:00 AM</option>
+          <option value="10:30 AM">10:30 AM</option>
+          <option value="11:00 AM">11:00 AM</option>
+          <option value="11:30 AM">11:30 AM</option>
+          <option value="12:00 PM (Noon)">12:00 PM (Noon)</option>
+          <option value="12:30 PM">12:30 PM</option>
+          <option value="01:00 PM">01:00 PM</option>
+          <option value="01:30 PM">01:30 PM</option>
+          <option value="02:00 PM">02:00 PM</option>
+          <option value="02:30 PM">02:30 PM</option>
+          <option value="03:00 PM">03:00 PM</option>
+          <option value="03:30 PM">03:30 PM</option>
+          <option value="04:00 PM">04:00 PM</option>
+          <option value="04:30 PM">04:30 PM</option>
+          <option value="05:00 PM">05:00 PM</option>
+          <option value="05:30 PM">05:30 PM</option>
+          <option value="06:00 PM">06:00 PM</option>
+          <option value="06:30 PM">06:30 PM</option>
+          <option value="07:00 PM">07:00 PM</option>
+          <option value="07:30 PM">07:30 PM</option>
+          <option value="08:00 PM">08:00 PM</option>
+          <option value="08:30 PM">08:30 PM</option>
+          <option value="09:00 PM">09:00 PM</option>
+          <option value="09:30 PM">09:30 PM</option>
+          <option value="10:00 PM">10:00 PM</option>
+          <option value="11:00 PM">11:00 PM</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Outstation extra fields — show when outstation selected -->
+    <div id="outstation-extras" style="display:none">
+      <div class="row2">
+        <div class="field">
+          <label>Return Date</label>
+          <input type="date" id="returnDate">
+          <div class="hint">Leave blank for one way</div>
+        </div>
+        <div class="field">
+          <label>Trip Mode</label>
+          <div style="display:flex;gap:8px;margin-top:2px">
+            <div class="chip" style="min-height:auto;padding:10px 8px;flex:1" onclick="selectTripMode(this,'One Way')">One Way</div>
+            <div class="chip" style="min-height:auto;padding:10px 8px;flex:1" onclick="selectTripMode(this,'Round Trip')">Round Trip</div>
+          </div>
+          <input type="hidden" id="tripMode" value="">
+        </div>
+      </div>
+      <div class="field">
+        <label>No. of Passengers</label>
+        <select id="passengers">
+          <option value="">-- Select --</option>
+          <option value="1">1 passenger</option>
+          <option value="2">2 passengers</option>
+          <option value="3">3 passengers</option>
+          <option value="4">4 passengers</option>
+          <option value="5">5 passengers</option>
+          <option value="6">6 passengers</option>
+          <option value="7">7 passengers</option>
+        </select>
       </div>
     </div>
     <div class="field">
@@ -212,10 +283,18 @@ function loadAvailableVehicles() {
   document.head.appendChild(s);
   setTimeout(function(){ if(window[cbName]) s.onerror(); }, 5000);
 }
+function selectTripMode(el, mode) {
+  document.querySelectorAll('#outstation-extras .chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('tripMode').value = mode;
+}
+
 function selectTrip(t){
   tripType=t;
   ['city','out','air'].forEach(x=>document.getElementById('chip-'+x).classList.remove('selected'));
   document.getElementById('chip-'+t.replace('outstation','out').replace('airport','air')).classList.add('selected');
+  // Show outstation extras
+  document.getElementById('outstation-extras').style.display = (t==='outstation') ? '' : 'none';
 }
 // Set today as default date
 document.getElementById('tripDate').value = new Date().toISOString().split('T')[0];
@@ -251,6 +330,9 @@ function submitBooking(){
     time:v('tripTime'),
     preferredCar: document.getElementById('preferredCar').value || 'Any',
     preferredSeats: document.getElementById('preferredSeats').value || 'Any',
+    returnDate: document.getElementById('returnDate') ? document.getElementById('returnDate').value : '',
+    tripMode: document.getElementById('tripMode') ? document.getElementById('tripMode').value : '',
+    passengers: document.getElementById('passengers') ? document.getElementById('passengers').value : '',
     notes:v('notes'),
   };
 
