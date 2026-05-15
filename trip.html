@@ -876,6 +876,11 @@ function updateProgress(n) {
 }
 
 // ── Validation ─────────────────────────────────────────────────────
+function get(id) {
+  var el = document.getElementById(id);
+  return el ? el.value.trim() : '';
+}
+
 function validate(sec) {
   const show = (id, msg) => { document.getElementById(id).textContent = msg; err(id, true); return false; };
   if (sec === 0) {
