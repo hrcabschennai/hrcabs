@@ -543,13 +543,27 @@
       <div class="card-title"><span>🚗</span> Vehicle & Driver</div>
 
       <div class="field">
-        <label>Vehicle Number <span class="req">*</span></label>
-        <input type="text" id="vehicleNumber" placeholder="e.g. TN 10 CB 3638" style="text-transform:uppercase">
+        <label>Driver Name <span class="req">*</span></label>
+        <select id="driverName" onchange="onDriverSelect()">
+          <option value="">Loading drivers...</option>
+          <option value="__other__">Other (manual entry)</option>
+        </select>
+      </div>
+      <div class="field" id="driverName-other-wrap" style="display:none">
+        <label>Driver Name (manual)</label>
+        <input type="text" id="driverName-other" placeholder="Enter driver name">
       </div>
 
       <div class="field">
-        <label>Driver Name <span class="req">*</span></label>
-        <input type="text" id="driverName" placeholder="e.g. Vinoth Kumar G">
+        <label>Vehicle Number <span class="req">*</span></label>
+        <select id="vehicleNumber" onchange="onVehicleSelect()">
+          <option value="">Loading vehicles...</option>
+          <option value="__other__">Other (manual entry)</option>
+        </select>
+      </div>
+      <div class="field" id="vehicleNumber-other-wrap" style="display:none">
+        <label>Vehicle No. (manual)</label>
+        <input type="text" id="vehicleNumber-other" placeholder="e.g. TN10CB3638" style="text-transform:uppercase">
       </div>
 
       <div class="field">
@@ -876,8 +890,10 @@ function validate(sec) {
     return true;
   }
   if (sec === 2) {
-    if (!v('vehicleNumber')) return show('err2', 'Please enter vehicle number.');
-    if (!v('driverName'))    return show('err2', 'Please enter driver name.');
+    var _vn = get('vehicleNumber')==='__other__' ? get('vehicleNumber-other') : get('vehicleNumber');
+    var _dn = get('driverName')==='__other__' ? get('driverName-other') : get('driverName');
+    if (!_vn) return show('err2', 'Please select or enter vehicle number.');
+    if (!_dn) return show('err2', 'Please select or enter driver name.');
     if (!v('place'))         return show('err2', 'Please enter place / route.');
     return true;
   }
@@ -1023,8 +1039,8 @@ function submitForm() {
     customerPhone:   get('customerPhone'),
     customerAddress: get('customerAddress'),
     customerGSTIN:   get('customerGSTIN'),
-    vehicleNumber:   get('vehicleNumber'),
-    driverName:      get('driverName'),
+    vehicleNumber:   get('vehicleNumber') === '__other__' ? get('vehicleNumber-other') : get('vehicleNumber'),
+    driverName:      get('driverName') === '__other__' ? get('driverName-other') : get('driverName'),
     place:           get('place'),
     package:         state.selectedPkg || '',
     tripDate:        get('tripDate'),
@@ -1100,7 +1116,68 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('tripDate').value = today;
   document.getElementById('fromDate').value = today;
   document.getElementById('toDate').value   = today;
+  loadDriversAndVehicles();
 });
+
+function loadDriversAndVehicles() {
+  var cbName = 'dvCb' + Date.now();
+  var s = document.createElement('script');
+  window[cbName] = function(data) {
+    delete window[cbName]; s.remove();
+    var dsel = document.getElementById('driverName');
+    var vsel = document.getElementById('vehicleNumber');
+    dsel.innerHTML = '<option value="">-- Select Driver --</option>';
+    (data.drivers||[]).forEach(function(d) {
+      var o = document.createElement('option');
+      o.value = d.name;
+      o.textContent = d.name + (d.vehicle ? ' (' + d.vehicle + ')' : '');
+      o.setAttribute('data-vehicle', d.regNo||'');
+      dsel.appendChild(o);
+    });
+    var od = document.createElement('option');
+    od.value = '__other__'; od.textContent = 'Other (manual entry)';
+    dsel.appendChild(od);
+    vsel.innerHTML = '<option value="">-- Select Vehicle --</option>';
+    (data.vehicles||[]).forEach(function(v) {
+      var o = document.createElement('option');
+      o.value = v.regNo;
+      o.textContent = v.regNo + (v.model ? ' - ' + v.model : '');
+      vsel.appendChild(o);
+    });
+    var ov = document.createElement('option');
+    ov.value = '__other__'; ov.textContent = 'Other (manual entry)';
+    vsel.appendChild(ov);
+  };
+  s.onerror = function() {
+    delete window[cbName]; s.remove();
+    document.getElementById('driverName').innerHTML = '<option value="">-- None registered --</option><option value="__other__">Other (manual entry)</option>';
+    document.getElementById('vehicleNumber').innerHTML = '<option value="">-- None registered --</option><option value="__other__">Other (manual entry)</option>';
+  };
+  s.src = 'https://script.google.com/macros/s/AKfycbxNKPSLH7VHvHr39PDePDoLMcAySy2_P9THYvasxykCPi2xIxL5t857cz7iG34iqZuB-A/exec?action=getDrivers&callback=' + cbName;
+  document.head.appendChild(s);
+  setTimeout(function(){ if(window[cbName]) s.onerror(); }, 6000);
+}
+
+function onDriverSelect() {
+  var v = document.getElementById('driverName').value;
+  document.getElementById('driverName-other-wrap').style.display = v === '__other__' ? '' : 'none';
+  if (v && v !== '__other__') {
+    var sel = document.getElementById('driverName');
+    var opt = sel.options[sel.selectedIndex];
+    var rv = opt ? opt.getAttribute('data-vehicle') : '';
+    if (rv) {
+      var vsel = document.getElementById('vehicleNumber');
+      for (var i = 0; i < vsel.options.length; i++) {
+        if (vsel.options[i].value === rv) { vsel.selectedIndex = i; break; }
+      }
+    }
+  }
+}
+
+function onVehicleSelect() {
+  var v = document.getElementById('vehicleNumber').value;
+  document.getElementById('vehicleNumber-other-wrap').style.display = v === '__other__' ? '' : 'none';
+}
 </script>
 </body>
 </html>
