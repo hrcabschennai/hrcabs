@@ -317,10 +317,33 @@ function renderBookings(bookings){
         +(status!=='Negotiating'?'<button data-idx="'+i+'" data-status="Negotiating" onclick="updateBookingStatus(this)" style="padding:3px 8px;background:rgba(199,160,7,0.15);color:#C7A007;border:1px solid rgba(199,160,7,0.3);border-radius:5px;font-size:10px;cursor:pointer;font-family:inherit;margin:1px">₹ Negotiate</button>':'')
         +(status!=='Rejected'?'<button data-idx="'+i+'" data-status="Rejected" onclick="updateBookingStatus(this)" style="padding:3px 8px;background:rgba(200,50,50,0.1);color:#ff8080;border:1px solid rgba(200,50,50,0.3);border-radius:5px;font-size:10px;cursor:pointer;font-family:inherit;margin:1px">✗ Reject</button>':'')
         +(status!=='Lost'?'<button data-idx="'+i+'" data-status="Lost" onclick="updateBookingStatus(this)" style="padding:3px 8px;background:rgba(100,100,100,0.1);color:#888;border:1px solid rgba(100,100,100,0.2);border-radius:5px;font-size:10px;cursor:pointer;font-family:inherit;margin:1px">Lost</button>':'')
+        +'<button data-idx="'+i+'" onclick="createBillFromBooking(this)" style="padding:3px 10px;background:rgba(199,160,7,0.9);color:#000;border:none;border-radius:5px;font-size:10px;font-weight:700;cursor:pointer;font-family:inherit;margin:1px">🧾 Create Bill</button>'
         +'</td>'
         +'</tr>';
     }).join('')
     +'</tbody></table>';
+}
+
+function createBillFromBooking(btn) {
+  var idx = parseInt(btn.getAttribute('data-idx'));
+  var b = (allData.bookings||[])[idx];
+  if (!b) return;
+
+  var params = new URLSearchParams({
+    prefill:     '1',
+    name:        b.name        || '',
+    phone:       b.phone       || '',
+    pickup:      b.pickup      || '',
+    drop:        b.drop        || '',
+    date:        (b.date||'').toString().split('T')[0],
+    tripType:    b.tripType    || 'city',
+    tripMode:    b.tripMode    || '',
+    returnDate:  b.returnDate  || '',
+    seats:       b.preferredSeats || '',
+    car:         b.preferredCar   || '',
+  });
+
+  window.open('https://hrcabschennai.github.io/hrcabs/trip.html?' + params.toString(), '_blank');
 }
 
 function updateBookingStatus(btn){
