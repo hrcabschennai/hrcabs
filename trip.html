@@ -729,7 +729,7 @@
     </div>
 
     <!-- SHARED: KM + CHARGES -->
-    <div class="card">
+    <div class="card" id="km-card">
       <div class="card-title"><span>📏</span> KM Reading</div>
       <div class="row2">
         <div class="field">
@@ -909,6 +909,9 @@ function showSection(n) {
     document.getElementById('outstation-fields').style.display = isOut     ? '' : 'none';
     document.getElementById('airport-fields').style.display    = isAirport ? '' : 'none';
     document.getElementById('permit-field').style.display      = isOut     ? '' : 'none';
+    // Hide KM reading for airport — not needed
+    var kmCard = document.getElementById('km-card');
+    if (kmCard) kmCard.style.display = isAirport ? 'none' : '';
   }
 }
 
@@ -1241,9 +1244,21 @@ function prefillFromBooking(params) {
     var rdate  = params.get('returnDate') || '';
 
     var time = params.get('time') || '';
+    // Convert "7:00 AM" / "06:30 PM" → "07:00" / "18:30" for input[type=time]
+    function toTime24(t) {
+      if (!t) return '';
+      t = t.replace(/\(.*?\)/g,'').trim(); // remove (Noon) etc
+      var m = t.match(/(\d+):(\d+)\s*(AM|PM)/i);
+      if (!m) return '';
+      var h = parseInt(m[1]), min = m[2], ampm = m[3].toUpperCase();
+      if (ampm === 'AM' && h === 12) h = 0;
+      if (ampm === 'PM' && h !== 12) h += 12;
+      return String(h).padStart(2,'0') + ':' + min;
+    }
+    var time24 = toTime24(time);
     if (tripType === 'city') {
       if (document.getElementById('tripDate'))  document.getElementById('tripDate').value  = date;
-      if (document.getElementById('startTime') && time) document.getElementById('startTime').value = time;
+      if (document.getElementById('startTime') && time24) document.getElementById('startTime').value = time24;
       if (document.getElementById('place'))    document.getElementById('place').value    = pickup + (drop ? ' to ' + drop : '');
     } else if (tripType === 'outstation') {
       if (document.getElementById('fromDate'))    document.getElementById('fromDate').value    = date;
@@ -1254,11 +1269,15 @@ function prefillFromBooking(params) {
       if (mode) selectTripMode(mode);
     } else if (tripType === 'airport') {
       if (document.getElementById('airportDate')) document.getElementById('airportDate').value = date;
-      if (document.getElementById('airportTime') && time) document.getElementById('airportTime').value = time;
+      if (document.getElementById('airportTime') && time24) document.getElementById('airportTime').value = time24;
       if (document.getElementById('airportFrom')) document.getElementById('airportFrom').value = pickup;
       if (document.getElementById('airportTo'))   document.getElementById('airportTo').value   = drop;
       if (document.getElementById('place'))       document.getElementById('place').value       = pickup + (drop ? ' to ' + drop : '');
     }
+
+    // Hide KM for airport
+    var kmCard = document.getElementById('km-card');
+    if (kmCard) kmCard.style.display = (tripType === 'airport') ? 'none' : '';
 
     // Go back to section 2 so driver fills vehicle + place
     showSection(2);
