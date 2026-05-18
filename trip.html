@@ -1240,8 +1240,10 @@ function prefillFromBooking(params) {
     var mode   = params.get('tripMode') || '';
     var rdate  = params.get('returnDate') || '';
 
+    var time = params.get('time') || '';
     if (tripType === 'city') {
-      if (document.getElementById('tripDate')) document.getElementById('tripDate').value = date;
+      if (document.getElementById('tripDate'))  document.getElementById('tripDate').value  = date;
+      if (document.getElementById('startTime') && time) document.getElementById('startTime').value = time;
       if (document.getElementById('place'))    document.getElementById('place').value    = pickup + (drop ? ' to ' + drop : '');
     } else if (tripType === 'outstation') {
       if (document.getElementById('fromDate'))    document.getElementById('fromDate').value    = date;
@@ -1252,6 +1254,7 @@ function prefillFromBooking(params) {
       if (mode) selectTripMode(mode);
     } else if (tripType === 'airport') {
       if (document.getElementById('airportDate')) document.getElementById('airportDate').value = date;
+      if (document.getElementById('airportTime') && time) document.getElementById('airportTime').value = time;
       if (document.getElementById('airportFrom')) document.getElementById('airportFrom').value = pickup;
       if (document.getElementById('airportTo'))   document.getElementById('airportTo').value   = drop;
       if (document.getElementById('place'))       document.getElementById('place').value       = pickup + (drop ? ' to ' + drop : '');
