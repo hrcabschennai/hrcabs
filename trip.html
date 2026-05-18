@@ -1298,43 +1298,67 @@ function prefillFromBooking(params) {
   }, 500);
 }
 
+function populateDropdowns(data) {
+  var dsel = document.getElementById('driverName');
+  var vsel = document.getElementById('vehicleNumber');
+  dsel.innerHTML = '<option value="">-- Select Driver --</option>';
+  (data.drivers||[]).forEach(function(d) {
+    var o = document.createElement('option');
+    o.value = d.name;
+    o.textContent = d.name + (d.vehicle ? ' (' + d.vehicle + ')' : '');
+    o.setAttribute('data-vehicle', d.regNo||'');
+    dsel.appendChild(o);
+  });
+  var od = document.createElement('option');
+  od.value = '__other__'; od.textContent = 'Other (manual entry)';
+  dsel.appendChild(od);
+  vsel.innerHTML = '<option value="">-- Select Vehicle --</option>';
+  (data.vehicles||[]).forEach(function(v) {
+    var o = document.createElement('option');
+    o.value = v.regNo;
+    o.textContent = v.regNo + (v.model ? ' - ' + v.model : '');
+    vsel.appendChild(o);
+  });
+  var ov = document.createElement('option');
+  ov.value = '__other__'; ov.textContent = 'Other (manual entry)';
+  vsel.appendChild(ov);
+}
+
+function showFallbackDropdowns() {
+  document.getElementById('driverName').innerHTML = '<option value="">-- None registered --</option><option value="__other__">Other (manual entry)</option>';
+  document.getElementById('vehicleNumber').innerHTML = '<option value="">-- None registered --</option><option value="__other__">Other (manual entry)</option>';
+}
+
 function loadDriversAndVehicles() {
+  // Try fetch first (works on mobile browsers)
+  fetch('https://script.google.com/macros/s/AKfycbxNKPSLH7VHvHr39PDePDoLMcAySy2_P9THYvasxykCPi2xIxL5t857cz7iG34iqZuB-A/exec?action=getDrivers', {method:'GET', mode:'cors'})
+  .then(function(r){ return r.json(); })
+  .then(function(data){
+    if (data && (data.drivers || data.vehicles)) {
+      populateDropdowns(data);
+    } else {
+      loadDriversJSONP(); // fallback
+    }
+  })
+  .catch(function(){
+    loadDriversJSONP(); // fallback to JSONP
+  });
+}
+
+function loadDriversJSONP() {
   var cbName = 'dvCb' + Date.now();
   var s = document.createElement('script');
   window[cbName] = function(data) {
     delete window[cbName]; s.remove();
-    var dsel = document.getElementById('driverName');
-    var vsel = document.getElementById('vehicleNumber');
-    dsel.innerHTML = '<option value="">-- Select Driver --</option>';
-    (data.drivers||[]).forEach(function(d) {
-      var o = document.createElement('option');
-      o.value = d.name;
-      o.textContent = d.name + (d.vehicle ? ' (' + d.vehicle + ')' : '');
-      o.setAttribute('data-vehicle', d.regNo||'');
-      dsel.appendChild(o);
-    });
-    var od = document.createElement('option');
-    od.value = '__other__'; od.textContent = 'Other (manual entry)';
-    dsel.appendChild(od);
-    vsel.innerHTML = '<option value="">-- Select Vehicle --</option>';
-    (data.vehicles||[]).forEach(function(v) {
-      var o = document.createElement('option');
-      o.value = v.regNo;
-      o.textContent = v.regNo + (v.model ? ' - ' + v.model : '');
-      vsel.appendChild(o);
-    });
-    var ov = document.createElement('option');
-    ov.value = '__other__'; ov.textContent = 'Other (manual entry)';
-    vsel.appendChild(ov);
+    populateDropdowns(data);
   };
   s.onerror = function() {
     delete window[cbName]; s.remove();
-    document.getElementById('driverName').innerHTML = '<option value="">-- None registered --</option><option value="__other__">Other (manual entry)</option>';
-    document.getElementById('vehicleNumber').innerHTML = '<option value="">-- None registered --</option><option value="__other__">Other (manual entry)</option>';
+    showFallbackDropdowns();
   };
   s.src = 'https://script.google.com/macros/s/AKfycbxNKPSLH7VHvHr39PDePDoLMcAySy2_P9THYvasxykCPi2xIxL5t857cz7iG34iqZuB-A/exec?action=getDrivers&callback=' + cbName;
   document.head.appendChild(s);
-  setTimeout(function(){ if(window[cbName]) s.onerror(); }, 6000);
+  setTimeout(function(){ if(window[cbName]){ s.onerror(); } }, 8000);
 }
 
 function onDriverSelect() {
