@@ -464,6 +464,11 @@
           <div class="chip-label">Outstation</div>
           <div class="chip-sub">Multi-day / Per KM</div>
         </div>
+        <div class="chip" id="chip-airport" onclick="selectTrip('airport')">
+          <span class="chip-icon">✈️</span>
+          <div class="chip-label">Airport</div>
+          <div class="chip-sub">Fixed price</div>
+        </div>
       </div>
     </div>
 
@@ -689,6 +694,40 @@
 
     </div>
 
+    <!-- AIRPORT FIELDS -->
+    <div id="airport-fields" style="display:none">
+      <div class="card">
+        <div class="card-title"><span>✈️</span> Airport Transfer Details</div>
+        <div class="field">
+          <label>Trip Date <span class="req">*</span></label>
+          <input type="date" id="airportDate" style="color-scheme:dark">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Pickup Time <span class="req">*</span></label>
+            <input type="time" id="airportTime" style="color-scheme:dark">
+          </div>
+          <div class="field">
+            <label>Flight Number</label>
+            <input type="text" id="flightNo" placeholder="e.g. AI202" style="text-transform:uppercase">
+          </div>
+        </div>
+        <div class="field">
+          <label>From Address <span class="req">*</span></label>
+          <input type="text" id="airportFrom" placeholder="e.g. Vanagaram, Chennai">
+        </div>
+        <div class="field">
+          <label>To Address <span class="req">*</span></label>
+          <input type="text" id="airportTo" placeholder="e.g. Chennai Airport (MAA)">
+        </div>
+        <div class="field">
+          <label>Fixed Price (₹) <span class="req">*</span></label>
+          <input type="number" id="airportPrice" placeholder="e.g. 800" min="0" oninput="calcLive()">
+          <div class="hint">Enter agreed price. GST will be added if applicable.</div>
+        </div>
+      </div>
+    </div>
+
     <!-- SHARED: KM + CHARGES -->
     <div class="card">
       <div class="card-title"><span>📏</span> KM Reading</div>
@@ -810,6 +849,7 @@ function selectTrip(type) {
   state.tripType = type;
   document.getElementById('chip-city').classList.toggle('selected', type === 'city');
   document.getElementById('chip-outstation').classList.toggle('selected', type === 'outstation');
+  document.getElementById('chip-airport').classList.toggle('selected', type === 'airport');
   err('err0', false);
 }
 
@@ -862,10 +902,13 @@ function showSection(n) {
 
   // Show correct trip fields
   if (n === 3) {
-    const isCity = state.tripType === 'city';
-    document.getElementById('city-fields').style.display = isCity ? '' : 'none';
-    document.getElementById('outstation-fields').style.display = isCity ? 'none' : '';
-    document.getElementById('permit-field').style.display = isCity ? 'none' : '';
+    const isCity    = state.tripType === 'city';
+    const isOut     = state.tripType === 'outstation';
+    const isAirport = state.tripType === 'airport';
+    document.getElementById('city-fields').style.display       = isCity    ? '' : 'none';
+    document.getElementById('outstation-fields').style.display = isOut     ? '' : 'none';
+    document.getElementById('airport-fields').style.display    = isAirport ? '' : 'none';
+    document.getElementById('permit-field').style.display      = isOut     ? '' : 'none';
   }
 }
 
@@ -911,6 +954,13 @@ function validate(sec) {
       if (!v('tripDate'))     return show('err3', 'Please enter trip date.');
       if (!v('startTime'))    return show('err3', 'Please enter start time.');
       if (!v('endTime'))      return show('err3', 'Please enter end time.');
+    } else if (state.tripType === 'airport') {
+      if (!v('airportDate'))  return show('err3', 'Please enter trip date.');
+      if (!v('airportTime'))  return show('err3', 'Please enter pickup time.');
+      if (!v('airportFrom'))  return show('err3', 'Please enter pickup address.');
+      if (!v('airportTo'))    return show('err3', 'Please enter drop address.');
+      if (!v('airportPrice')) return show('err3', 'Please enter the fixed price.');
+      return true;
     } else {
       if (!v('fromDate'))    return show('err3', 'Please enter from date.');
       if (!v('toDate'))      return show('err3', 'Please enter to date.');
@@ -943,6 +993,20 @@ function calcLive() {
   let base=0, extraKMC=0, extraHrC=0, bata=0;
   let breakdown = '';
 
+  const isAirport = state.tripType === 'airport';
+  if (isAirport) {
+    const price = parseFloat(document.getElementById('airportPrice').value) || 0;
+    let finalTotal = price;
+    let bd = '<b>Fixed Price:</b> ₹' + price;
+    if (state.gstBill === 'yes' && state.gstRate) {
+      const gstAmt = price * parseFloat(state.gstRate) / 100;
+      finalTotal = price + gstAmt;
+      bd += ' + <b>GST ' + state.gstRate + '%:</b> ₹' + gstAmt.toFixed(2);
+    }
+    document.getElementById('review-total').textContent = '₹ ' + finalTotal.toFixed(2);
+    document.getElementById('review-breakdown').innerHTML = bd;
+    return;
+  }
   if (isCity && state.selectedPkg) {
     const [incHrs, incKM, baseAmt] = PACKAGES[state.selectedPkg] || [0,0,0];
     base = baseAmt;
@@ -1051,9 +1115,13 @@ function submitForm() {
     driverName:      get('driverName') === '__other__' ? get('driverName-other') : get('driverName'),
     place:           get('place'),
     package:         state.selectedPkg || '',
-    tripDate:        get('tripDate'),
-    startTime:       get('startTime'),
+    tripDate:        state.tripType === 'airport' ? get('airportDate') : get('tripDate'),
+    startTime:       state.tripType === 'airport' ? get('airportTime') : get('startTime'),
     endTime:         get('endTime'),
+    airportPrice:    get('airportPrice'),
+    airportFrom:     get('airportFrom'),
+    airportTo:       get('airportTo'),
+    flightNo:        get('flightNo'),
     fromDate:        get('fromDate'),
     toDate:          get('toDate'),
     bataPerDay:      get('bataPerDay'),
