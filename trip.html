@@ -1193,7 +1193,74 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('fromDate').value = today;
   document.getElementById('toDate').value   = today;
   loadDriversAndVehicles();
+
+  // Pre-fill from booking if ?prefill=1 in URL
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('prefill') === '1') {
+    prefillFromBooking(params);
+  }
 });
+
+function prefillFromBooking(params) {
+  // Show a banner
+  var banner = document.createElement('div');
+  banner.innerHTML = '📋 Pre-filled from booking — check details and add KM to generate invoice';
+  banner.style.cssText = 'background:rgba(199,160,7,0.15);border:1px solid rgba(199,160,7,0.4);border-radius:10px;padding:10px 14px;font-size:13px;color:#C7A007;margin-bottom:12px;text-align:center';
+  document.querySelector('.container').insertBefore(banner, document.querySelector('.section'));
+
+  // Step 1 — Trip type
+  var tripType = params.get('tripType') || 'city';
+  selectTrip(tripType === 'outstation' ? 'outstation' : tripType === 'airport' ? 'airport' : 'city');
+
+  // Default to no GST
+  selectGST('no');
+
+  // Auto-advance to section 1
+  showSection(1);
+
+  // Step 1 — Customer
+  setTimeout(function() {
+    var name  = params.get('name')  || '';
+    var phone = params.get('phone') || '';
+    if (document.getElementById('customerName'))  document.getElementById('customerName').value  = name;
+    if (document.getElementById('customerPhone')) document.getElementById('customerPhone').value = phone;
+
+    // Auto-advance to section 2
+    showSection(2);
+
+    // Step 2 — Vehicle (leave for driver to fill)
+
+    // Auto-advance to section 3
+    showSection(3);
+
+    // Step 3 — Trip details
+    var pickup = params.get('pickup') || '';
+    var drop   = params.get('drop')   || '';
+    var date   = params.get('date')   || new Date().toISOString().split('T')[0];
+    var mode   = params.get('tripMode') || '';
+    var rdate  = params.get('returnDate') || '';
+
+    if (tripType === 'city') {
+      if (document.getElementById('tripDate')) document.getElementById('tripDate').value = date;
+      if (document.getElementById('place'))    document.getElementById('place').value    = pickup + (drop ? ' to ' + drop : '');
+    } else if (tripType === 'outstation') {
+      if (document.getElementById('fromDate'))    document.getElementById('fromDate').value    = date;
+      if (document.getElementById('toDate'))      document.getElementById('toDate').value      = rdate || date;
+      if (document.getElementById('fromAddress')) document.getElementById('fromAddress').value = pickup;
+      if (document.getElementById('toAddress'))   document.getElementById('toAddress').value   = drop;
+      if (document.getElementById('place'))       document.getElementById('place').value       = pickup + (drop ? ' to ' + drop : '');
+      if (mode) selectTripMode(mode);
+    } else if (tripType === 'airport') {
+      if (document.getElementById('airportDate')) document.getElementById('airportDate').value = date;
+      if (document.getElementById('airportFrom')) document.getElementById('airportFrom').value = pickup;
+      if (document.getElementById('airportTo'))   document.getElementById('airportTo').value   = drop;
+      if (document.getElementById('place'))       document.getElementById('place').value       = pickup + (drop ? ' to ' + drop : '');
+    }
+
+    // Go back to section 2 so driver fills vehicle + place
+    showSection(2);
+  }, 500);
+}
 
 function loadDriversAndVehicles() {
   var cbName = 'dvCb' + Date.now();
