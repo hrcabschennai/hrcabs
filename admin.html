@@ -307,7 +307,7 @@ function renderBookings(bookings){
         +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border);font-weight:600">'+(b.name||'')+'</td>'
         +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border)"><a href="tel:'+b.phone+'" style="color:var(--gold)">'+(b.phone||'')+'</a></td>'
         +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border)">'+(b.tripType||'')+'</td>'
-        +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border);color:var(--muted)">'+(b.date||'').toString().split('T')[0]+'</td>'
+        +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border);color:var(--muted)">'+(b.date||'').toString().split('T')[0]+(b.time?' '+b.time:'')+'</td>'
         +'<td style="padding:8px;font-size:12px;border-bottom:1px solid var(--border)">'+(b.pickup||'')+' → '+(b.drop||'')+'</td>'
         +'<td style="padding:8px;border-bottom:1px solid var(--border)">'
         +'<span style="padding:3px 8px;border-radius:4px;font-size:10px;font-weight:700;background:'+statusBg+';color:'+statusColor+'">'+status+'</span>'
@@ -336,9 +336,11 @@ function createBillFromBooking(btn) {
     pickup:      b.pickup      || '',
     drop:        b.drop        || '',
     date:        (b.date||'').toString().split('T')[0],
+    time:        b.time        || '',
     tripType:    b.tripType    || 'city',
     tripMode:    b.tripMode    || '',
     returnDate:  b.returnDate  || '',
+    passengers:  b.passengers  || '',
     seats:       b.preferredSeats || '',
     car:         b.preferredCar   || '',
   });
